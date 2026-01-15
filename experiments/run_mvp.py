@@ -6,6 +6,8 @@ from memory.memory_item import MemoryItem
 from memory.memory_store import MemoryStore
 from memory.memory_retriever import MemoryRetriever
 from memory.importance_tracker import ImportanceTracker
+from memory.forgetting_policy import ForgettingPolicy
+from controller.memory_controller import MemoryController
 
 
 
@@ -23,6 +25,16 @@ def main():
     importance_Tracker = ImportanceTracker(
         decay_rate=0.0005,
         usage_boost=0.05
+    )
+
+    forgetting_policy = ForgettingPolicy(
+        forget_threshold=0.5,
+        retain_threshold=1.2
+    )
+
+    memory_controller = MemoryController(
+        importance_Tracker,
+        forgetting_policy
     )
 
     FORGET_THRESHOLD = 0.5
@@ -84,13 +96,9 @@ def main():
         memory_store.add(new_memory)
 
         # Apply importance decay + forgetting
-        remaining_memories = []
-        for m in memory_store.get_all():
-            importance_Tracker.update(m)
-            if not importance_Tracker.should_forget(m, FORGET_THRESHOLD):
-                remaining_memories.append(m)
-
-        memory_store.memories = remaining_memories
+        memory_store.memories = memory_controller.update_memories(
+            memory_store.get_all()
+        )
 
         # Console logs for the debugging
 
