@@ -3,7 +3,7 @@ from .memory_item import MemoryItem
 
 class MemoryStore:
     """
-    Simple in-memory storgae for MemoryItem objects.
+    Stores episodic and semantic memories
     """
 
     def __init__(self):
@@ -20,6 +20,9 @@ class MemoryStore:
         Return all memories.
         """
         return self.memories
+    
+    def get_by_type(self, memory_type: str) -> List[MemoryItem]:
+        return [m for m in self.memories if m.memory_type == memory_type]
     
     def size(self) -> int:
         """

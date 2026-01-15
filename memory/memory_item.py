@@ -6,12 +6,14 @@ import uuid
 @dataclass
 class MemoryItem:
     """
-    Atomic memory unit stored in the system.
+    Atomic memory unit stored in the system. ( Episodic / Semantic )
     """
 
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     content: str = ""
     embedding: Any = None
+
+    memory_type: str = "episodic"
 
     # Metadata (used later) ( Added Importance-Related metadata)
     importance: float = 1.0

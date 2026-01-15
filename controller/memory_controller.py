@@ -1,7 +1,9 @@
-from typing import List 
+from typing import List
 from memory.memory_item import MemoryItem
 from memory.importance_tracker import ImportanceTracker
 from memory.forgetting_policy import ForgettingPolicy, MemoryAction
+from memory.memory_compressor import MemoryCompressor
+
 
 class MemoryController:
     """
@@ -9,38 +11,36 @@ class MemoryController:
     """
 
     def __init__(
-            self,
-            importance_tracker: ImportanceTracker,
-            forgetting_policy: ForgettingPolicy
+        self,
+        importance_tracker: ImportanceTracker,
+        forgetting_policy: ForgettingPolicy,
+        compressor: MemoryCompressor
     ):
         self.importance_tracker = importance_tracker
         self.forgetting_policy = forgetting_policy
+        self.compressor = compressor
 
     def update_memories(
-            self,
-            memories: List[MemoryItem]
+        self,
+        memories: List[MemoryItem]
     ) -> List[MemoryItem]:
-        """
-        Apply importance updates and selective forgetting.
-        """
 
-        updated_memories = []
+        updated = []
+        to_compress = []
 
         for memory in memories:
-            # Update importance
             self.importance_tracker.update(memory)
-
-            # Decide action
             action = self.forgetting_policy.decide(memory)
 
             if action == MemoryAction.RETAIN:
-                updated_memories.append(memory)
-
-            elif action == MemoryAction.FORGET:
-                continue # Drop Memory
-
+                updated.append(memory)
             elif action == MemoryAction.COMPRESS:
-                # Placeholder for phase 4
-                updated_memories.append(memory)
+                to_compress.append(memory)
+            elif action == MemoryAction.FORGET:
+                continue
 
-        return updated_memories
+        # Apply compression
+        semantic_memories = self.compressor.compress(to_compress)
+        updated.extend(semantic_memories)
+
+        return updated

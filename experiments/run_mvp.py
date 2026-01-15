@@ -2,12 +2,14 @@ import yaml
 from llm.llm_wrapper import LLMWrapper
 from llm.response_parser import ResponseParser
 from sentence_transformers import SentenceTransformer
+from memory.memory_compressor import MemoryCompressor
 from memory.memory_item import MemoryItem
 from memory.memory_store import MemoryStore
 from memory.memory_retriever import MemoryRetriever
 from memory.importance_tracker import ImportanceTracker
 from memory.forgetting_policy import ForgettingPolicy
 from controller.memory_controller import MemoryController
+
 
 
 
@@ -31,10 +33,13 @@ def main():
         forget_threshold=0.5,
         retain_threshold=1.2
     )
+    
+    compressor = MemoryCompressor(compression_threshold=0.8)
 
     memory_controller = MemoryController(
         importance_Tracker,
-        forgetting_policy
+        forgetting_policy,
+        compressor
     )
 
     FORGET_THRESHOLD = 0.5
@@ -74,6 +79,8 @@ def main():
         # Build prompt
         prompt = (
             "You are a helpful assistant.\n\n"
+            "Answer the user's question using the known facts if available.\n"
+            "If no relevant facts exist, use recent interactions.\n\n"
             f"{memory_context}\n"
             f"User: {user_input}\n"
             "Assistant:"
