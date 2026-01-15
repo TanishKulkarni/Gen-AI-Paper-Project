@@ -1,0 +1,8 @@
+llm:
+  model_name: distilgpt2
+  max_new_tokens: 128
+  temperature: 0.7
+
+runtime:
+  device: cpu
+  seed: 42
