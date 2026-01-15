@@ -5,6 +5,8 @@ from sentence_transformers import SentenceTransformer
 from memory.memory_item import MemoryItem
 from memory.memory_store import MemoryStore
 from memory.memory_retriever import MemoryRetriever
+from memory.importance_tracker import ImportanceTracker
+
 
 
 def load_config(path="configs/default.yaml"):
@@ -18,6 +20,12 @@ def main():
     encoder = SentenceTransformer("all-MiniLM-L6-v2")
     memory_store = MemoryStore()
     retriever = MemoryRetriever(memory_store)
+    importance_Tracker = ImportanceTracker(
+        decay_rate=0.0005,
+        usage_boost=0.05
+    )
+
+    FORGET_THRESHOLD = 0.5
 
     llm = LLMWrapper(
         model_name=config["llm"]["model_name"],
@@ -49,6 +57,7 @@ def main():
             )
             for m in past_memories:
                 memory_context += f"- {m.content}\n"
+                importance_Tracker.update(m)
 
         # Build prompt
         prompt = (
@@ -68,14 +77,26 @@ def main():
         print(f"Assistant: {response}")
 
         # Store interaction as memory
-        memory_store.add(
-            MemoryItem(
+        new_memory = MemoryItem(
                 content=f"User: {user_input} | Assistant: {response}",
                 embedding=user_embedding
             )
-        )
+        memory_store.add(new_memory)
 
-        print(f"[Memory size: {memory_store.size()}]\n")
+        # Apply importance decay + forgetting
+        remaining_memories = []
+        for m in memory_store.get_all():
+            importance_Tracker.update(m)
+            if not importance_Tracker.should_forget(m, FORGET_THRESHOLD):
+                remaining_memories.append(m)
+
+        memory_store.memories = remaining_memories
+
+        # Console logs for the debugging
+
+        print(f"[Memory size: {memory_store.size()}]\n"
+              f"Avg importance: {sum(m.importance for m in memory_store.get_all()) / max(1, memory_store.size()):.2f}]"
+              )
 
 
 if __name__ == "__main__":

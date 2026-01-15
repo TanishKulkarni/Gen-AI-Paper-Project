@@ -13,12 +13,16 @@ class MemoryItem:
     content: str = ""
     embedding: Any = None
 
-    # Metadata (used later)
+    # Metadata (used later) ( Added Importance-Related metadata)
+    importance: float = 1.0
     timestamp: float = field(default_factory=time.time)
+    last_accessed: float = field(default_factory=time.time)
     usage_count: int = 0
 
     def touch(self):
         """
         Called whenever this memory is retrieved.
+        Reinforces importance.
         """
         self.usage_count += 1
+        self.last_accessed = time.time()
